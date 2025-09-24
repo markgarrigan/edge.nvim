@@ -1,48 +1,71 @@
-local indent = require('edge.indent')
+local indent_api = require('edge.indent')
 
 local M = {}
 
-local void_tags = {
-  area=true, base=true, br=true, col=true, embed=true, hr=true, img=true,
-  input=true, link=true, meta=true, param=true, source=true, track=true, wbr=true,
+local user_openers = indent_api.user_openers
+local user_closers = indent_api.user_closers
+
+local openers = {
+  "^%s*@if%b()",
+  "^%s*@each%b()",
+  "^%s*@for%f[%s%(%w]",
+  "^%s*@switch%b()",
+  "^%s*@layout%.%w+%b()",
+  "^%s*@else%s*$",
+  "^%s*@elseif%b()%s*$",
+  "^%s*<[%w:_%-][^>]*>%s*$",
 }
+
+local closers = {
+  "^%s*@end%s*$",
+  "^%s*@endeach%s*$",
+  "^%s*@else%s*$",
+  "^%s*@elseif%b()%s*$",
+  "^%s*</[%w:_%-]+>%s*$",
+}
+
+local function any_match(patterns, line)
+  for _, pat in ipairs(patterns) do
+    if line:find(pat) then return true end
+  end
+  return false
+end
+
+local function is_open(line)
+  return any_match(openers, line) or any_match(user_openers, line)
+end
+
+local function is_close(line)
+  return any_match(closers, line) or any_match(user_closers, line)
+end
 
 local function trim_right(s) return (s:gsub("%s+$", "")) end
 
-local function tag_name_of_open(s)
-  local name = s:match("^%s*<([%w:_%-]+)")
-  return name
-end
-
-local function is_void_tag_line(s)
-  local n = tag_name_of_open(s)
-  if not n then return false end
-  if s:match("/>%s*$") then return true end
-  return void_tags[n] or false
-end
-
-local function is_edge_directive(s)
-  return s:find("^%s*@") ~= nil
-end
-
 function M.format_lines(lines)
   local out = {}
-  for lnum = 1, #lines do
-    local raw = trim_right(lines[lnum] or "")
-    local spaces = indent.indent(lnum)
-    local prefix = string.rep(" ", spaces)
+  local level = 0
+  local sw = tonumber(vim.g.edge_indent_width) or vim.bo.shiftwidth
+  if sw == 0 then sw = 2 end
 
-    if raw == "" then
+  for _, raw in ipairs(lines) do
+    local line = trim_right(raw or "")
+
+    if is_close(line) then
+      level = math.max(0, level - 1)
+    end
+
+    local prefix = string.rep(" ", sw * level)
+    if line == "" then
       table.insert(out, "")
-    elseif is_void_tag_line(raw) then
-      -- Keep as-is but normalize minimal spacing at '/>'
-      table.insert(out, prefix .. raw:gsub("%s*/>", " />"))
-    elseif is_edge_directive(raw) then
-      table.insert(out, prefix .. raw)
     else
-      table.insert(out, prefix .. raw)
+      table.insert(out, prefix .. line)
+    end
+
+    if is_open(line) then
+      level = level + 1
     end
   end
+
   return out
 end
 

@@ -1,24 +1,25 @@
 local M = {}
 
--- User-supplied additions (filled by setup)
 M.user_openers = {}
 M.user_closers = {}
 
--- Built-in patterns
 local openers = {
   "^%s*@if%b()",
   "^%s*@each%b()",
   "^%s*@for%f[%s%(%w]",
   "^%s*@switch%b()",
   "^%s*@layout%.%w+%b()",
-  "^%s*<[%w:_%-][^>]*>%s*$", -- opening HTML tag line
+  "^%s*@else%s*$",
+  "^%s*@elseif%b()%s*$",
+  "^%s*<[%w:_%-][^>]*>%s*$",
 }
 
 local closers = {
   "^%s*@end%s*$",
+  "^%s*@endeach%s*$",
   "^%s*@else%s*$",
   "^%s*@elseif%b()%s*$",
-  "^%s*</[%w:_%-]+>%s*$", -- closing HTML tag line
+  "^%s*</[%w:_%-]+>%s*$",
 }
 
 local function any_match(patterns, line)
@@ -46,7 +47,7 @@ function M.indent(lnum)
   local prev_levels = math.max(0, math.floor(vim.fn.indent(lnum - 1) / sw))
 
   local cur_delta = is_closer(curr) and -1 or 0
-  local prev_delta = (is_opener(prev) and not is_closer(prev)) and 1 or 0
+  local prev_delta = is_opener(prev) and 1 or 0
 
   local levels = math.max(0, prev_levels + prev_delta + cur_delta)
   return levels * sw

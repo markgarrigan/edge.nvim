@@ -1,9 +1,9 @@
 # edge.nvim
 
-A lightweight, pure‑Lua Neovim plugin that gives **EdgeJS (`*.edge`) templates** first‑class editing:
-- Smart **on‑type indentation** for Edge blocks (`@if/@else/@end`, `@each/@endeach`, `@layout.*(...)`) and HTML tags.
+A lightweight, pure-Lua Neovim plugin that gives **EdgeJS (`*.edge`) templates** first-class editing:
+- Smart **on-type indentation** for Edge blocks (`@if/@else/@end`, `@each/@endeach`, `@layout.*(...)`) and HTML tags.
 - A conservative **formatter** (via `null-ls`) that normalizes indentation using the same rules.
-- Works with existing **html‑language‑server** and **tailwindcss‑language‑server** for LSP features (hover, diagnostics, completion).
+- Works with existing **html-language-server** and **tailwindcss-language-server** for LSP features (hover, diagnostics, completion).
 - Optional **LuaSnip** snippets for common Edge/HTML blocks.
 
 No external binaries. No Mason package required. Just drop this folder in your `packpath` or add via your manager.
@@ -18,9 +18,9 @@ If you use a custom manager that clones repos into `~/.config/nvim/pack/<group>/
 git clone https://example.com/your/edge.nvim.git   ~/.config/nvim/pack/lsp/start/edge.nvim
 ```
 
-> Replace the URL with your fork. This repo is self‑contained (no build step).
+> Replace the URL with your fork. This repo is self-contained (no build step).
 
-Neovim will auto‑load plugins in `pack/*/start/*` on startup.
+Neovim will auto-load plugins in `pack/*/start/*` on startup.
 
 ### With lazy.nvim (optional)
 
@@ -77,7 +77,7 @@ require("edge").setup({
 
 The plugin also:
 - Extends `html` LSP to include `edge`: `filetypes = { "html", "edge" }`.
-- Registers Tree‑sitter language mapping: `edge` → `html` (if TS is present).
+- Registers Tree-sitter language mapping: `edge` → `html` (if TS is present).
 
 ---
 
@@ -86,7 +86,7 @@ The plugin also:
 Open any `*.edge` file and start typing. On Enter, the next line is placed at the correct indent.  
 To format the buffer:
 
-- Built‑in mapping in this ftplugin: `<leader>fe`
+- Built-in mapping in this ftplugin: `<leader>fe`
 - Or call: `:lua vim.lsp.buf.format()`
 
 > The formatter is conservative: it won’t rewrite attributes or join/split tags—just indentation/trailing spaces.
@@ -111,7 +111,7 @@ edge.nvim/
 
 ## Notes
 
-- You still get all html-ls features: hover, completion, diagnostics, go‑to‑definition for HTML semantics, etc.
+- You still get all html-ls features: hover, completion, diagnostics, go-to-definition for HTML semantics, etc.
 - Tailwind LSP can be told to treat `edge` as HTML:
   ```lua
   vim.lsp.config["tailwindcss"] = {
