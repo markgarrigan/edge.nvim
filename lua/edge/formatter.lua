@@ -78,4 +78,21 @@ function M.format_text(text)
   return table.concat(formatted, "\n")
 end
 
+
+function M.format_text(text)
+  local str
+  if type(text) == "table" then
+    -- null-ls often passes a table of lines
+    str = table.concat(text, "\n")
+  else
+    str = tostring(text or "")
+  end
+  local lines = {}
+  for line in (str .. "\n"):gmatch("([^\n]*)\n") do
+    table.insert(lines, line)
+  end
+  local formatted = M.format_lines(lines)
+  return table.concat(formatted, "\n")
+end
+
 return M
