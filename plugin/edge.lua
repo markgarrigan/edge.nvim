@@ -1,2 +1,1 @@
--- edge.nvim v6: explicit setup only.
--- Nothing runs automatically here. Call `require('edge').setup()` in your config.
+-- explicit setup; call require('edge').setup() in your config
