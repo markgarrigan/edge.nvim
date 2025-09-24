@@ -1,4 +1,3 @@
-
 local M = {}
 
 function M.source()
@@ -14,7 +13,9 @@ function M.source()
         if type(content) == "table" then
           content = table.concat(content, "\n")
         end
-        return require("edge.formatter").format_text(content)
+        local formatted = require("edge.formatter").format_text(content)
+        -- null-ls expects a list of results; formatting uses { { text = ... } }
+        return { { text = formatted } }
       end,
     },
   }

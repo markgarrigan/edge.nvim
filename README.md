@@ -126,3 +126,20 @@ edge.nvim/
 ## License
 
 MIT
+
+
+### Null-ls registration helper
+
+To avoid load-order gotchas and return-shape bugs, you can register the formatter like this:
+
+```lua
+local null_ls = require("null-ls")
+local edge_source = require("edge.null_ls_helper").source()
+
+null_ls.setup({
+  sources = vim.tbl_filter(function(s) return s end, {
+    null_ls.builtins.formatting.stylua,
+    edge_source, -- returns nil if null-ls missing
+  }),
+})
+```
