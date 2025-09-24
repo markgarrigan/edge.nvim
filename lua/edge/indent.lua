@@ -8,7 +8,6 @@ local openers = {
   "^%s*@each%b()",
   "^%s*@for%f[%s%(%w]",
   "^%s*@switch%b()",
-  "^%s*@layout%.%w+%b()",
   "^%s*@else%s*$",
   "^%s*@elseif%b()%s*$",
   "^%s*<[%w:_%-][^>]*>%s*$",

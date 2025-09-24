@@ -10,7 +10,6 @@ local openers = {
   "^%s*@each%b()",
   "^%s*@for%f[%s%(%w]",
   "^%s*@switch%b()",
-  "^%s*@layout%.%w+%b()",
   "^%s*@else%s*$",
   "^%s*@elseif%b()%s*$",
   "^%s*<[%w:_%-][^>]*>%s*$",
@@ -41,11 +40,11 @@ end
 
 local function trim_right(s) return (s:gsub("%s+$", "")) end
 
-function M.format_lines(lines)
+function M.format_lines(lines, sw)
   local out = {}
   local level = 0
-  local sw = tonumber(vim.g.edge_indent_width) or vim.bo.shiftwidth
-  if sw == 0 then sw = 2 end
+  sw = tonumber(sw) or tonumber(vim.g.edge_indent_width) or vim.bo.shiftwidth
+  if sw == 0 or sw == nil then sw = 2 end
 
   for _, raw in ipairs(lines) do
     local line = trim_right(raw or "")
@@ -69,7 +68,7 @@ function M.format_lines(lines)
   return out
 end
 
-function M.format_text(text)
+function M.format_text(text, sw)
   local str
   if type(text) == "table" then
     str = table.concat(text, "\n")

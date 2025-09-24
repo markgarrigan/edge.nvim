@@ -55,7 +55,12 @@ local function register_edge_formatter()
         if type(content) == "table" then
           content = table.concat(content, "\n")
         end
-        local formatted = require("edge.formatter").format_text(content)
+        local sw = 2
+        pcall(function()
+          sw = vim.api.nvim_buf_get_option(params.bufnr, 'shiftwidth')
+        end)
+        if sw == 0 or sw == nil then sw = 2 end
+        local formatted = require("edge.formatter").format_text(content, sw)
         return { { text = formatted } }
       end,
     },
