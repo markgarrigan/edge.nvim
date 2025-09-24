@@ -97,6 +97,21 @@ function M.setup(opts)
   ts_map_edge_to_html()
   make_html_not_format_edge()
 
+
+  -- Enforce indent width on edge buffers (runs after EditorConfig etc.)
+  vim.api.nvim_create_augroup("edge_buf_opts", { clear = true })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = "edge_buf_opts",
+    pattern = "edge",
+    callback = function(args)
+      local sw = M.opts.indent_width or 2
+      vim.bo[args.buf].shiftwidth = sw
+      vim.bo[args.buf].tabstop = sw
+      vim.bo[args.buf].softtabstop = sw
+      vim.bo[args.buf].expandtab = true
+    end,
+  })
+
   -- Register null-ls formatter if desired
   if M.opts.register_null_ls then
     register_edge_formatter()

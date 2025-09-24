@@ -7,17 +7,22 @@ local user_closers = indent_api.user_closers
 
 local openers = {
   "^%s*@if%b()",
+  "^%s*@elseif%b()%s*$",
+  "^%s*@else%s*$",
   "^%s*@each%b()",
   "^%s*@for%f[%s%(%w]",
   "^%s*@switch%b()",
-  "^%s*@else%s*$",
-  "^%s*@elseif%b()%s*$",
+  "^%s*@layout%.%w+%b()",
   "^%s*<[%w:_%-][^>]*>%s*$",
 }
 
 local closers = {
   "^%s*@end%s*$",
+  "^%s*@endif%s*$",
   "^%s*@endeach%s*$",
+  "^%s*@endforeach%s*$",
+  "^%s*@endfor%s*$",
+  "^%s*@endswitch%s*$",
   "^%s*@else%s*$",
   "^%s*@elseif%b()%s*$",
   "^%s*</[%w:_%-]+>%s*$",
@@ -80,7 +85,7 @@ function M.format_text(text, sw)
   for line in (str .. "\n"):gmatch("([^\n]*)\n") do
     table.insert(lines, line)
   end
-  local formatted = M.format_lines(lines)
+  local formatted = M.format_lines(lines, sw)
   return table.concat(formatted, "\n")
 end
 

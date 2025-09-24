@@ -5,17 +5,22 @@ M.user_closers = {}
 
 local openers = {
   "^%s*@if%b()",
+  "^%s*@elseif%b()%s*$",  -- acts as opener for the following line
+  "^%s*@else%s*$",        -- acts as opener for the following line
   "^%s*@each%b()",
   "^%s*@for%f[%s%(%w]",
   "^%s*@switch%b()",
-  "^%s*@else%s*$",
-  "^%s*@elseif%b()%s*$",
+  "^%s*@layout%.%w+%b()", -- layout is a true block opener
   "^%s*<[%w:_%-][^>]*>%s*$",
 }
 
 local closers = {
   "^%s*@end%s*$",
+  "^%s*@endif%s*$",
   "^%s*@endeach%s*$",
+  "^%s*@endforeach%s*$",
+  "^%s*@endfor%s*$",
+  "^%s*@endswitch%s*$",
   "^%s*@else%s*$",
   "^%s*@elseif%b()%s*$",
   "^%s*</[%w:_%-]+>%s*$",
