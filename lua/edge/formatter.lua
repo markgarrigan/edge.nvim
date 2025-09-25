@@ -59,7 +59,15 @@ local function js_brace_delta(s)
   return opens - closes
 end
 local function is_js_reopener(line)
-  return line:find("^%s*else[%s%{%:]") or line:find("^%s*catch[%s%(%{]") or line:find("^%s*finally[%s%{%:]")
+  -- Reopeners: else, else if, catch, finally
+  -- Match when they start the line OR come after a closing brace `}` on the same line.
+  if line:find("^%s*else[%s%(%{:]") then return true end
+  if line:find("^%s*}%s*else[%s%(%{:]") then return true end
+  if line:find("^%s*catch[%s%(%{]") then return true end
+  if line:find("^%s*}%s*catch[%s%(%{]") then return true end
+  if line:find("^%s*finally[%s%{%:]") then return true end
+  if line:find("^%s*}%s*finally[%s%{%:]") then return true end
+  return false
 end
 local function js_pre_dedent(line)
   if line:find("^%s*[}%]%)]") then return 1 end
