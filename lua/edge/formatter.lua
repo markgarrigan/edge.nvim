@@ -21,6 +21,17 @@ end
 local function is_html_close(line)
   return line:find("^%s*</[%w:_%-]+>%s*$") ~= nil
 end
+
+local function is_html_single_line_block(line)
+  -- opening <tag ...> ... </tag> on the SAME line (non-void)
+  local open = line:match("^%s*<([%w:_%-]+)[^>]*>")
+  if not open then return false end
+  if void_tags[open:lower()] then return false end
+  -- must end with matching close; tolerant of inner content
+  local pat = "</" .. open .. ">%s*$"
+  if line:find(pat) then return true end
+  return false
+end
 local function is_html_open_start(line)
   -- starts with <tag but has no closing >
   return (line:find("^%s*<[%w:_%-]") ~= nil) and (line:find(">%s*$") == nil) and (line:find("^%s*</") == nil)
@@ -109,7 +120,9 @@ function M.format_lines(lines, sw)
     else
       if is_html_open_start(stripped) then
         pending_html_open = true
-      elseif opens_script or opens_style or is_html_open(stripped) then
+      elseif opens_script or opens_style then
+        post_html = 1
+      elseif (not is_html_single_line_block(stripped)) and is_html_open(stripped) then
         post_html = 1
       end
     end
