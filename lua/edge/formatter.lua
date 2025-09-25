@@ -141,7 +141,7 @@ function M.format_lines(lines, sw)
       end
     end
 
-    local post_js = ((in_script or in_style) and js_post_indent(stripped) or 0) - ((in_script or in_style) and (is_js_iife_tail(stripped) and 1 or 0) or 0)
+    local post_js = ((in_script or in_style) and js_post_indent(stripped) or 0)
 
     edge_level = edge_level + post_edge
     html_level = html_level + post_html
