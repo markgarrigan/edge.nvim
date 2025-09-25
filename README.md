@@ -1,10 +1,10 @@
-# edge.nvim v6.7
+# edge.nvim v6.8
 
-EdgeJS (`.edge`) formatter + indenter for Neovim.
-
-**What’s new in v6.7**
-- HTML opener detection now **ignores void tags** (`img`, `br`, `input`, etc.) and **self-closing tags** (`<tag ... />`), preventing phantom indentation that could misalign `@else/@end`.
-- Keeps v6.6 improvements: `@else/@elseif/@case/@default` behave as close+open, `<script>/<style>` preserve inner indentation, `@layout` indents top-level.
+Fixes top-level mis-indents by tracking **Edge level** and **HTML level** separately:
+- Edge blocks (`@layout/@if/@each/@for/@switch`) control a base indent.
+- HTML tags control a nested indent.
+- Reopener tokens (`@else/@elseif/@case/@default`) behave as close+open at the **Edge** level.
+- `<script>/<style>` preserve internal indentation; only get the outer offset.
 
 ## Setup
 ```lua
