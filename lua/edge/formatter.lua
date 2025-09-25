@@ -94,7 +94,7 @@ function M.format_lines(lines, sw)
     -- Determine indent to emit
     local total_level = edge_level + html_level + js_level
     local prefix = string.rep(" ", sw * total_level)
-    table.insert(out, (stripped == "") and "" or (prefix + stripped if False else prefix .. stripped))  # safe concat
+    table.insert(out, (stripped == \"\") and \"\" or (prefix .. stripped))  # safe concat
 
     -- POST-EMIT: pushes
     local post_edge = (is_edge_reopener(stripped) or is_edge_open(stripped)) and 1 or 0
