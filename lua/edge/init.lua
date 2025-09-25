@@ -1,5 +1,10 @@
 local M = {}
-local defaults = { indent_width = nil, register_null_ls = true, enable_snippets = false, layout_is_block = false }
+
+local defaults = {
+  indent_width = nil,
+  layout_is_block = true,
+  register_null_ls = true,
+}
 
 local function extend_html_filetypes()
   pcall(function()
@@ -38,8 +43,8 @@ local function register_formatter()
       fn = function(params)
         local content = params.content
         if type(content) == "table" then content = table.concat(content, "\n") end
-        local sw = 2
-        pcall(function() sw = vim.api.nvim_buf_get_option(params.bufnr, 'shiftwidth') end)
+        local sw = M.opts.indent_width
+        if not sw then pcall(function() sw = vim.api.nvim_buf_get_option(params.bufnr, 'shiftwidth') end) end
         if not sw or sw == 0 then sw = 2 end
         local formatted = require("edge.formatter").format_text(content, sw)
         return { { text = formatted } }
@@ -50,11 +55,32 @@ local function register_formatter()
   vim.g.edge_null_ls_registered = true
 end
 
+local function enforce_indent_width()
+  local grp = vim.api.nvim_create_augroup("edge_buf_opts", { clear = true })
+  vim.api.nvim_create_autocmd("FileType", {
+    group = grp,
+    pattern = "edge",
+    callback = function(args)
+      local sw = M.opts.indent_width or vim.bo[args.buf].shiftwidth
+      if not sw or sw == 0 then sw = 2 end
+      vim.bo[args.buf].shiftwidth = sw
+      vim.bo[args.buf].tabstop = sw
+      vim.bo[args.buf].softtabstop = sw
+      vim.bo[args.buf].expandtab = true
+    end,
+  })
+end
+
 function M.setup(opts)
   M.opts = vim.tbl_deep_extend('force', defaults, opts or {})
+  vim.g.edge_indent_width = M.opts.indent_width
   vim.g.edge_layout_is_block = M.opts.layout_is_block
+
+  vim.filetype.add({ extension = { edge = 'edge' } })
   extend_html_filetypes()
   disable_html_format_on_edge()
+  enforce_indent_width()
   if M.opts.register_null_ls then register_formatter() end
 end
+
 return M
