@@ -84,9 +84,9 @@ local function js_post_indent(line)
 end
 
 local function is_js_iife_tail(line)
-  -- Matches "})();" or "})   ;" etc.
-  -- Start with '}', then optional spaces, then ')', optional spaces, then optional "()" (invoke) and/or ';'
-  return line:find("^%s*}%s*%)%s*%(%s*%)?%s*;?%s*$") ~= nil
+  -- Matches "})();" and variants with spaces/comments
+  -- e.g., "})();", "}) ();", "})(); // tail"
+  return line:find("^%s*}%s*%)%s*%(%s*%)?%s*;?%s*//?.*$") ~= nil
 end
 
 function M.format_lines(lines, sw)
@@ -115,6 +115,9 @@ function M.format_lines(lines, sw)
     edge_level = math.max(0, edge_level - pre_edge)
     html_level = math.max(0, html_level - pre_html)
     js_level   = math.max(0, js_level   - pre_js)
+
+    -- If we're closing </script>/<style>, force JS depth to zero so it can't bleed into HTML/Edge
+    if closes_script or closes_style then js_level = 0 end
 
     -- Determine indent to emit
     local total_level = edge_level + html_level + js_level
