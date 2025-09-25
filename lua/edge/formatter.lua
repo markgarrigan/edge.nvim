@@ -19,8 +19,6 @@ local function is_html_close(line) return line:find("^%s*</[%w:_%-]+>%s*$") end
 function M.format_lines(lines, sw)
   local out, level = {}, 0; if not sw or sw == 0 then sw = 2 end
   local in_script, in_style = false, false
-  -- Track an Edge-only baseline so top-level HTML stays indented under edge blocks
-  local edge_level = 0
   for _, raw in ipairs(lines) do
     local raw_r = trim_right(raw or "")
     local opens_script = raw_r:find("^%s*<script[%s>].*")
@@ -28,26 +26,14 @@ function M.format_lines(lines, sw)
     local opens_style  = raw_r:find("^%s*<style[%s>].*")
     local closes_style = raw_r:find("^%s*</style>%s*$")
     local line = (in_script or in_style) and raw_r or trim_left(raw_r)
-    -- Pre: edge-only dedent for edge closers/reopeners
-    if is_edge_close(line) or is_reopener(line) then
-      edge_level = math.max(0, edge_level - 1)
-    end
-    -- Pre: total level dedent for html/script/style closers and also for edge closers/reopeners
     if is_edge_close(line) or is_reopener(line) or is_html_close(line) or closes_script or closes_style then
       level = math.max(0, level - 1)
     end
-    -- Effective indent cannot go below current edge baseline
-    local eff = math.max(level, edge_level)
-    local prefix = string.rep(" ", sw * eff)
+    local prefix = string.rep(" ", sw * level)
     table.insert(out, (line == "") and "" or (prefix .. line))
-    -- Post: reopener pushes edge baseline back
     if is_reopener(line) then
-      edge_level = edge_level + 1
       level = level + 1
-    elseif is_edge_open(line) then
-      edge_level = edge_level + 1
-      level = level + 1
-    elseif is_html_open(line) or opens_script or opens_style then
+    elseif is_edge_open(line) or is_html_open(line) or opens_script or opens_style then
       level = level + 1
     end
     if opens_script then in_script = true end
