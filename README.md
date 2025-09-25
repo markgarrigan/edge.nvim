@@ -1,10 +1,10 @@
-# edge.nvim v6.8
+# edge.nvim v6.9
 
-Fixes top-level mis-indents by tracking **Edge level** and **HTML level** separately:
-- Edge blocks (`@layout/@if/@each/@for/@switch`) control a base indent.
-- HTML tags control a nested indent.
-- Reopener tokens (`@else/@elseif/@case/@default`) behave as close+open at the **Edge** level.
-- `<script>/<style>` preserve internal indentation; only get the outer offset.
+Refines `@else/@elseif/@case/@default` handling to avoid rare misalignment:
+- Treats those as **close-then-open** at the *Edge* level only.
+- Keeps separate **Edge** and **HTML** indent levels.
+- Ignores void/self-closing tags for HTML opens.
+- Preserves inner indentation in `<script>`/`<style>`.
 
 ## Setup
 ```lua

@@ -21,7 +21,6 @@ local function is_html_close(line)
 end
 
 
--- Edge tokens
 local function is_edge_open(line)
   if vim.g.edge_layout_is_block and line:find("^%s*@layout%.%w+%b()") then return true end
   return line:find("^%s*@if%b()") or line:find("^%s*@each%b()") or line:find("^%s*@for%f[%s%(%w]") or line:find("^%s*@switch%b()")
@@ -49,36 +48,32 @@ function M.format_lines(lines, sw)
     local raw_r = trim_right(raw or "")
     local line = trim_left(raw_r)
 
-    -- track script/style
     local opens_script = raw_r:find("^%s*<script[%s>].*")
     local closes_script = raw_r:find("^%s*</script>%s*$")
     local opens_style = raw_r:find("^%s*<style[%s>].*")
     local closes_style = raw_r:find("^%s*</style>%s*$")
 
-    -- PRE-EMIT: apply dedents
+    -- PRE: edge/html pops
     if is_edge_close(line) then edge_level = math.max(0, edge_level - 1) end
     if is_reopener(line) then edge_level = math.max(0, edge_level - 1) end
     if is_html_close(line) or closes_script or closes_style then html_level = math.max(0, html_level - 1) end
 
-    local level = edge_level + html_level
-    local prefix = string.rep(" ", sw * level)
-
+    local prefix = string.rep(" ", sw * (edge_level + html_level))
     local to_emit = ((in_script or in_style) and raw_r or line)
-    if to_emit == "" then
-      table.insert(out, "")
-    else
-      table.insert(out, prefix .. to_emit)
-    end
+    table.insert(out, (to_emit == "") and "" or (prefix .. to_emit))
 
-    -- POST-EMIT: apply opens
-    if is_reopener(line) then edge_level = edge_level + 1 end
-    if is_edge_open(line) then edge_level = edge_level + 1 end
+    -- POST: edge/html pushes
+    if is_reopener(line) then
+      edge_level = edge_level + 1
+    elseif is_edge_open(line) then
+      edge_level = edge_level + 1
+    end
 
     if opens_script or opens_style or is_html_open(line) then
       html_level = html_level + 1
     end
 
-    -- toggle script/style flags after processing
+    -- toggle script/style
     if opens_script then in_script = true end
     if closes_script then in_script = false end
     if opens_style then in_style = true end

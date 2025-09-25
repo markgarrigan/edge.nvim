@@ -21,18 +21,18 @@ local function is_html_close(line)
 end
 
 
-local function is_reopener(line)
-  return line:find("^%s*@else%s*$") or line:find("^%s*@elseif%b()%s*$") or line:find("^%s*@case%s+") or line:find("^%s*@default%s*$")
-end
-
 local function is_edge_open(line)
   if vim.g.edge_layout_is_block and line:find("^%s*@layout%.%w+%b()") then return true end
-  return line:find("^%s*@if%b()") or line:find("^%s*@each%b()") or line:find("^%s*@for%f[%s%(%w]") or line:find("^%s*@switch%b()") or is_reopener(line)
+  return line:find("^%s*@if%b()") or line:find("^%s*@each%b()") or line:find("^%s*@for%f[%s%(%w]") or line:find("^%s*@switch%b()")
 end
 
 local function is_edge_close(line)
   return line:find("^%s*@end%s*$") or line:find("^%s*@endif%s*$") or line:find("^%s*@endeach%s*$") or
-         line:find("^%s*@endforeach%s*$") or line:find("^%s*@endfor%s*$") or line:find("^%s*@endswitch%s*$") or is_reopener(line)
+         line:find("^%s*@endforeach%s*$") or line:find("^%s*@endfor%s*$") or line:find("^%s*@endswitch%s*$")
+end
+
+local function is_reopener(line)
+  return line:find("^%s*@else%s*$") or line:find("^%s*@elseif%b()%s*$") or line:find("^%s*@case%s+") or line:find("^%s*@default%s*$")
 end
 
 function M.indent(lnum)
@@ -47,13 +47,11 @@ function M.indent(lnum)
   local cur_delta = 0
   local prev_delta = 0
 
-  -- current line dedent if a closer or html closer
-  if is_edge_close(curr) or is_html_close(curr) then
+  if is_edge_close(curr) or is_html_close(curr) or is_reopener(curr) then
     cur_delta = cur_delta - 1
   end
 
-  -- previous line open adds a level (edge or html open)
-  if is_edge_open(prev) or is_html_open(prev) then
+  if is_edge_open(prev) or is_html_open(prev) or is_reopener(prev) then
     prev_delta = prev_delta + 1
   end
 
