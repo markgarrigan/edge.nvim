@@ -75,6 +75,12 @@ local function js_post_indent(line)
   return 0
 end
 
+local function is_js_iife_tail(line)
+  -- Matches "})();" or "})   ;" etc.
+  -- Start with '}', then optional spaces, then ')', optional spaces, then optional "()" (invoke) and/or ';'
+  return line:find("^%s*}%s*%)%s*%(%s*%)?%s*;?%s*$") ~= nil
+end
+
 function M.format_lines(lines, sw)
   if not sw or sw == 0 then sw = 2 end
   local out = {}
@@ -96,7 +102,7 @@ function M.format_lines(lines, sw)
     -- PRE-EMIT: level pops
     local pre_edge = (is_edge_close(stripped) or is_edge_reopener(stripped)) and 1 or 0
     local pre_html = ((is_html_close(stripped) or closes_script or closes_style) and 1 or 0)
-    local pre_js   = ((in_script or in_style) and js_pre_dedent(stripped) or 0)
+    local pre_js   = ((in_script or in_style) and (is_js_iife_tail(stripped) and 0 or js_pre_dedent(stripped)) or 0)
 
     edge_level = math.max(0, edge_level - pre_edge)
     html_level = math.max(0, html_level - pre_html)
@@ -127,7 +133,7 @@ function M.format_lines(lines, sw)
       end
     end
 
-    local post_js = ((in_script or in_style) and js_post_indent(stripped) or 0)
+    local post_js = ((in_script or in_style) and js_post_indent(stripped) or 0) - ((in_script or in_style) and (is_js_iife_tail(stripped) and 1 or 0) or 0)
 
     edge_level = edge_level + post_edge
     html_level = html_level + post_html
