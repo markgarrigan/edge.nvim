@@ -1,22 +1,19 @@
-# edge.nvim
+# edge.nvim v6.6
 
-A pure Lua LSP-style formatter and indentation plugin for EdgeJS (`.edge`) templates.
+EdgeJS (`.edge`) formatter + indenter for Neovim.
 
-## Features
-- Indents HTML properly under `@layout.*(...)` (default enabled)
-- Aligns `@if`, `@each`, `@end` blocks correctly
-- Preserves internal indentation inside `<script>` and `<style>`
-- Disables html-ls formatting for `.edge` files (but keeps hover/completion)
-- Includes a built-in `null-ls` formatter (no external binary)
+## Highlights
+
+- ✅ Top-level HTML indents under `@layout`
+- ✅ Preserves internal indentation in `<script>` and `<style>`
+- ✅ `@else`, `@elseif`, `@case`, and `@default` align with their parent block
+- ✅ Nested blocks indent correctly and `@end` pops indentation cleanly
 
 ## Setup
 
-Call this **after** your other LSP setup:
-
 ```lua
 require("edge").setup({
-  -- optional
-  -- indent_width = 2,       -- uses &shiftwidth if nil
-  -- layout_is_block = true, -- default true
+  -- indent_width = 2,
+  -- layout_is_block = true,
 })
 ```

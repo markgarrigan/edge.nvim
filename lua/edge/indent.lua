@@ -8,6 +8,8 @@ local function build_openers()
     "^%s*@each%b()",
     "^%s*@for%f[%s%(%w]",
     "^%s*@switch%b()",
+    "^%s*@case%s+",
+    "^%s*@default%s*$",
     "^%s*<[%w:_%-][^>]*>%s*$",
   }
   if vim.g.edge_layout_is_block then
@@ -23,8 +25,6 @@ local closers = {
   "^%s*@endforeach%s*$",
   "^%s*@endfor%s*$",
   "^%s*@endswitch%s*$",
-  "^%s*@else%s*$",
-  "^%s*@elseif%b()%s*$",
   "^%s*</[%w:_%-]+>%s*$",
 }
 

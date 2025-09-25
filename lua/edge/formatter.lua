@@ -8,6 +8,8 @@ local function build_openers()
     "^%s*@each%b()",
     "^%s*@for%f[%s%(%w]",
     "^%s*@switch%b()",
+    "^%s*@case%s+",
+    "^%s*@default%s*$",
     "^%s*<[%w:_%-][^>]*>%s*$",
   }
   if vim.g.edge_layout_is_block then
@@ -23,9 +25,15 @@ local closers = {
   "^%s*@endforeach%s*$",
   "^%s*@endfor%s*$",
   "^%s*@endswitch%s*$",
+  "^%s*</[%w:_%-]+>%s*$",
+}
+
+-- Tokens that are close + open pairs (align siblings)
+local reopener_tokens = {
   "^%s*@else%s*$",
   "^%s*@elseif%b()%s*$",
-  "^%s*</[%w:_%-]+>%s*$",
+  "^%s*@case%s+",
+  "^%s*@default%s*$",
 }
 
 local function any_match(patts, line)
@@ -37,6 +45,7 @@ end
 
 local function is_open(line) return any_match(build_openers(), line) end
 local function is_close(line) return any_match(closers, line) end
+local function is_reopener(line) return any_match(reopener_tokens, line) end
 
 local function trim_right(s) return (s:gsub("%s+$", "")) end
 local function trim_left(s) return (s:gsub("^%s+", "")) end
@@ -44,6 +53,7 @@ local function trim_left(s) return (s:gsub("^%s+", "")) end
 function M.format_lines(lines, sw)
   local out, level = {}, 0
   if not sw or sw == 0 then sw = 2 end
+
   local in_script, in_style = false, false
 
   for _, raw in ipairs(lines) do
@@ -51,13 +61,18 @@ function M.format_lines(lines, sw)
     local stripped = trim_left(raw_r)
     local line = stripped
 
-    -- Track script/style blocks
     if raw_r:find("^%s*<script[%s>].*") then in_script = true end
     if raw_r:find("^%s*</script>%s*$") then in_script = false end
     if raw_r:find("^%s*<style[%s>].*") then in_style = true end
     if raw_r:find("^%s*</style>%s*$") then in_style = false end
 
+    -- If this line is a closer (like @end), pop
     if is_close(line) then
+      level = math.max(0, level - 1)
+    end
+
+    -- If it's a reopener (@else, @case), pop then immediately re-push
+    if is_reopener(line) then
       level = math.max(0, level - 1)
     end
 
@@ -69,7 +84,10 @@ function M.format_lines(lines, sw)
       table.insert(out, prefix .. to_emit)
     end
 
-    if is_open(line) or raw_r:find("^%s*<script[%s>].*") or raw_r:find("^%s*<style[%s>].*") then
+    -- After printing a reopener, push back
+    if is_reopener(line) then
+      level = level + 1
+    elseif is_open(line) or raw_r:find("^%s*<script[%s>].*") or raw_r:find("^%s*<style[%s>].*") then
       level = level + 1
     end
   end

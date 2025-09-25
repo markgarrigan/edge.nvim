@@ -1,1 +1,1 @@
--- explicit setup required: require('edge').setup() in your config
+-- require('edge').setup() required
