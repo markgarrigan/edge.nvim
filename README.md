@@ -1,15 +1,7 @@
-# edge.nvim v6.9
-
-Refines `@else/@elseif/@case/@default` handling to avoid rare misalignment:
-- Treats those as **close-then-open** at the *Edge* level only.
-- Keeps separate **Edge** and **HTML** indent levels.
-- Ignores void/self-closing tags for HTML opens.
-- Preserves inner indentation in `<script>`/`<style>`.
-
-## Setup
-```lua
-require("edge").setup({
-  -- indent_width = 2,
-  -- layout_is_block = true,
-})
-```
+# edge.nvim v6.10 (pragmatic)
+Rules:
+- Strip leading indent for non-<script>/<style> lines
+- Single indent level
+- Closers + re-openers dedent before emit; re-openers then re-indent
+- Openers indent after emit
+- Preserve inner indent inside <script>/<style>
