@@ -1,19 +1,10 @@
-# edge.nvim v7.0
+# edge.nvim v7.1
 
-A pragmatic, **single-pass** formatter/indenter for EdgeJS (`.edge`) with JS-aware `<script>` handling.
-
-## What’s new
-- Deterministic **line-by-line** algorithm with three levels:
-  - **edge_level** for `@layout/@if/@each/@for/@switch` (reopeners: `@else/@elseif/@case/@default`)
-  - **html_level** for **non-void, non-self-closing** HTML elements
-  - **js_level** inside `<script>`/**<style>** using **brace-based** indentation (`{}`), plus `else/catch/finally` as re-openers
-- Handles mixed content: Edge + HTML + inline JS.
-- Honors your `shiftwidth` (fallback 2).
-
-## Setup
-```lua
-require("edge").setup({
-  -- indent_width = 2,
-  -- layout_is_block = true,
-})
-```
+Delta from v7.0:
+- **Multi-line HTML openers** are now indented correctly:
+  - `<div` (no `>`) line and following attribute lines indent at the current level.
+  - The line that ends the tag with `>` emits at the same level, then starts the HTML block (**html_level += 1**).
+- All previous improvements preserved:
+  - Edge blocks with reopener semantics
+  - JS brace-based indentation inside `<script>/<style>`
+  - Void/self-closing tag detection

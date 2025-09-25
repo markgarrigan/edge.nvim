@@ -21,6 +21,10 @@ end
 local function is_html_close(line)
   return line:find("^%s*</[%w:_%-]+>%s*$") ~= nil
 end
+local function is_html_open_start(line)
+  -- starts with <tag but has no closing >
+  return (line:find("^%s*<[%w:_%-]") ~= nil) and (line:find(">%s*$") == nil) and (line:find("^%s*</") == nil)
+end
 
 -- Edge helpers
 local function is_edge_open(line)
@@ -36,11 +40,9 @@ local function is_edge_reopener(line)
          line:find("^%s*@case%s+") or line:find("^%s*@default%s*$")
 end
 
--- JS helpers (very pragmatic)
+-- JS helpers
 local function js_brace_delta(s)
-  -- remove simple // comments
   s = s:gsub("//.*$", "")
-  -- very naive: count braces; this is good enough for inline handlers
   local opens = 0; for _ in s:gmatch("{") do opens = opens + 1 end
   local closes = 0; for _ in s:gmatch("}") do closes = closes + 1 end
   return opens - closes
@@ -49,7 +51,6 @@ local function is_js_reopener(line)
   return line:find("^%s*else[%s%{%:]") or line:find("^%s*catch[%s%(%{]") or line:find("^%s*finally[%s%{%:]")
 end
 local function js_pre_dedent(line)
-  -- Dedent before if the line starts with } or ] or ) or is a JS reopener token
   if line:find("^%s*[}%]%)]") then return 1 end
   if is_js_reopener(line) then return 1 end
   local delta = js_brace_delta(line)
@@ -65,15 +66,15 @@ end
 
 function M.format_lines(lines, sw)
   if not sw or sw == 0 then sw = 2 end
-
   local out = {}
   local edge_level, html_level, js_level = 0, 0, 0
   local in_script, in_style = false, false
+  local pending_html_open = false  -- inside multi-line start tag
 
   for _, raw in ipairs(lines) do
     local raw_r = trim_right(raw or "")
 
-    -- Detect mode transitions
+    -- detect script/style boundaries
     local opens_script = raw_r:find("^%s*<script[%s>].*")
     local closes_script = raw_r:find("^%s*</script>%s*$")
     local opens_style  = raw_r:find("^%s*<style[%s>].*")
@@ -81,46 +82,45 @@ function M.format_lines(lines, sw)
 
     local stripped = trim_left(raw_r)
 
-    -- PRE-EMIT: compute dedents
-    local pre_edge = 0
-    if is_edge_close(stripped) or is_edge_reopener(stripped) then pre_edge = pre_edge + 1 end
-
-    local pre_html = 0
-    if is_html_close(stripped) or closes_script or closes_style then pre_html = pre_html + 1 end
-
-    local pre_js = 0
-    if in_script or in_style then
-      pre_js = js_pre_dedent(stripped)
-    end
+    -- PRE-EMIT: level pops
+    local pre_edge = (is_edge_close(stripped) or is_edge_reopener(stripped)) and 1 or 0
+    local pre_html = ((is_html_close(stripped) or closes_script or closes_style) and 1 or 0)
+    local pre_js   = ((in_script or in_style) and js_pre_dedent(stripped) or 0)
 
     edge_level = math.max(0, edge_level - pre_edge)
     html_level = math.max(0, html_level - pre_html)
     js_level   = math.max(0, js_level   - pre_js)
 
+    -- Determine indent to emit
     local total_level = edge_level + html_level + js_level
     local prefix = string.rep(" ", sw * total_level)
+    table.insert(out, (stripped == "") and "" or (prefix + stripped if False else prefix .. stripped))  # safe concat
 
-    -- For script/style body, we format like JS: trim left then apply prefix + js indent
-    local to_emit = stripped
-    table.insert(out, (to_emit == "") and "" or (prefix .. to_emit))
-
-    -- POST-EMIT: compute increments
-    local post_edge = 0
-    if is_edge_reopener(stripped) or is_edge_open(stripped) then post_edge = post_edge + 1 end
+    -- POST-EMIT: pushes
+    local post_edge = (is_edge_reopener(stripped) or is_edge_open(stripped)) and 1 or 0
 
     local post_html = 0
-    if opens_script or opens_style or is_html_open(stripped) then post_html = post_html + 1 end
-
-    local post_js = 0
-    if in_script or in_style then
-      post_js = js_post_indent(stripped)
+    if pending_html_open then
+      -- We're in a multi-line start tag: only when we see the line with '>' do we open html block
+      if stripped:find(">%s*$") and not stripped:find("/>%s*$") then
+        post_html = 1
+        pending_html_open = false
+      end
+    else
+      if is_html_open_start(stripped) then
+        pending_html_open = true
+      elseif opens_script or opens_style or is_html_open(stripped) then
+        post_html = 1
+      end
     end
+
+    local post_js = ((in_script or in_style) and js_post_indent(stripped) or 0)
 
     edge_level = edge_level + post_edge
     html_level = html_level + post_html
     js_level   = js_level   + post_js
 
-    -- Toggle modes AFTER using open/close info
+    -- toggle modes after
     if opens_script then in_script = true end
     if closes_script then in_script = false end
     if opens_style then in_style = true end
